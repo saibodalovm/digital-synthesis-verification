@@ -22,19 +22,11 @@ module signed_add_with_saturation
   output [3:0] sum
 );
 
-  // Task:
-  //
-  // Implement a module that adds two signed numbers with saturation.
-  //
-  // "Adding with saturation" means:
-  //
-  // When the result does not fit into 4 bits,
-  // and the arguments are positive,
-  // the sum should be set to the maximum positive number.
-  //
-  // When the result does not fit into 4 bits,
-  // and the arguments are negative,
-  // the sum should be set to the minimum negative number.
+  logic [3:0] temp_sum;
+  assign temp_sum = a + b;
 
+  assign sum = ((temp_sum[3] != a[3]) & (a[3] == b[3]))
+             ? (a[3] ? 4'b1000 : 4'b0111)
+             : temp_sum;
 
 endmodule
