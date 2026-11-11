@@ -74,17 +74,42 @@ module sort_three_floats (
     output                         err
 );
 
-    // Task:
-    // Implement a module that accepts three Floating-Point numbers and outputs them in the increasing order.
-    // The module should be combinational with zero latency.
-    // The solution can use up to three instances of the "f_less_or_equal" module.
-    //
-    // Notes:
-    // res0 must be less or equal to the res1
-    // res1 must be less or equal to the res2
-    //
-    // The FLEN parameter is defined in the "import/preprocessed/cvw/config-shared.vh" file
-    // and usually equal to the bit width of the double-precision floating-point number, FP64, 64 bits.
+    logic cmp0_res, cmp1_res, cmp2_res;
+    logic err0, err1, err2;
 
+    logic [FLEN - 1:0] st1_low,  st1_high;
+    logic [FLEN - 1:0] st2_low;
+
+    f_less_or_equal i_cmp0 (.a(unsorted[0]), .b(unsorted[1]), .res(cmp0_res), .err(err0));
+    f_less_or_equal i_cmp1 (.a(st1_high),    .b(unsorted[2]), .res(cmp1_res), .err(err1));
+    f_less_or_equal i_cmp2 (.a(st1_low),     .b(st2_low),     .res(cmp2_res), .err(err2));
+
+    assign err = err0 | err1 | err2;
+
+    always_comb begin
+        if (cmp0_res) begin
+            st1_low  = unsorted[0];
+            st1_high = unsorted[1];
+        end else begin
+            st1_low  = unsorted[1];
+            st1_high = unsorted[0];
+        end
+
+        if (cmp1_res) begin
+            st2_low   = st1_high;
+            sorted[2] = unsorted[2];
+        end else begin
+            st2_low   = unsorted[2];
+            sorted[2] = st1_high;
+        end
+
+        if (cmp2_res) begin
+            sorted[0] = st1_low;
+            sorted[1] = st2_low;
+        end else begin
+            sorted[0] = st2_low;
+            sorted[1] = st1_low;
+        end
+    end
 
 endmodule
