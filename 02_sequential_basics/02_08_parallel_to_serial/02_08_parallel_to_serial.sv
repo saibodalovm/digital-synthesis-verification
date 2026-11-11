@@ -17,17 +17,32 @@ module parallel_to_serial
     output logic               serial_valid,
     output logic               serial_data
 );
-    // Task:
-    // Implement a module that converts multi-bit parallel value to the single-bit serial data.
-    //
-    // The module should accept 'width' bit input parallel data when 'parallel_valid' input is asserted.
-    // At the same clock cycle as 'parallel_valid' is asserted, the module should output
-    // the least significant bit of the input data. In the following clock cycles the module
-    // should output all the remaining bits of the parallel_data.
-    // Together with providing correct 'serial_data' value, module should also assert the 'serial_valid' output.
-    //
-    // Note:
-    // Check the waveform diagram in the README for better understanding.
+    logic [width-1:0] current_bit;
+    logic [width-1:0] data_reg;
+    logic busy_reg;
 
+    always_ff @(posedge clk)
+        if (rst) begin
+            data_reg <= '0;
+            busy_reg <= '0;
+            current_bit <= '0;
+        end
+        else if (busy_reg) begin
+            if (current_bit + 1 == width) begin
+                busy_reg <= '0;
+                current_bit <= '0;
+            end
+            else 
+                current_bit <= current_bit + 1;
+        end
+        else if (parallel_valid) begin
+            data_reg <= parallel_data;
+            busy_reg <= '1;
+            current_bit <= 1;
+        end
+
+    assign serial_valid = parallel_valid | busy;
+    assign serial_data = busy ? data_reg[current_bit] : parallel_data[0];
+    assign busy = busy_reg;
 
 endmodule

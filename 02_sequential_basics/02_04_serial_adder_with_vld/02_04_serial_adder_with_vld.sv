@@ -22,12 +22,24 @@ module serial_adder_with_vld
   //
   // The vld signal indicates when the input values are valid.
   // The last signal indicates when the last digits of the input numbers has been received.
-  //
+  // 
   // When vld is high, the module should add the values of a and b and produce the sum.
   // When last is high, the module should output the sum and reset its internal state, but
   // only if vld is also high, otherwise last should be ignored.
   //
   // When rst is high, the module should reset its internal state.
+  logic carry;
+  wire  carry_d;
 
+  assign sum = vld ? (a ^ b ^ carry) : 1'b0;
+  assign carry_d = (a & b) | (a & carry) | (b & carry);
+
+  always_ff @ (posedge clk)
+    if (rst)
+      carry <= '0;
+    else if (last && vld)
+      carry <= '0;
+    else if (vld)
+      carry <= carry_d;
 
 endmodule
